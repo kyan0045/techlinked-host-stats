@@ -1,0 +1,69 @@
+name: Refresh dashboard data
+
+on:
+  schedule:
+    - cron: "15 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-dashboard-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+      GEMINI_REQUESTS_PER_MINUTE: 12
+      GEMINI_DAILY_REQUEST_LIMIT: 450
+      GEMINI_BATCH_SIZE: 15
+      GEMINI_CLIP_SECONDS: 30
+      REPORT_START_DATE: 2025-07-01
+      REPORT_END_DATE: today
+      MIN_VIDEO_AGE_DAYS: 7
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Collect YouTube data
+        id: collect
+        run: npm run collect
+
+      - name: Classify new uploads
+        id: classify
+        continue-on-error: true
+        run: npm run classify
+
+      - name: Generate summary
+        id: report
+        continue-on-error: true
+        run: npm run report
+
+      - name: Commit refresh state
+        if: always()
+        env:
+          COLLECT_OUTCOME: ${{ steps.collect.outcome }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/gemini-usage.json
+          if [ "$COLLECT_OUTCOME" = "success" ]; then
+            git add data/videos.json data/hosts.json
+          fi
+          git diff --cached --quiet || git commit -m "chore(data): refresh dashboard snapshot"
+          git push
+
+      - name: Report processing failure
+        if: always() && (steps.collect.outcome == 'failure' || steps.classify.outcome == 'failure' || steps.report.outcome == 'failure')
+        run: exit 1

@@ -1,0 +1,17 @@
+{
+  "name": "techlinked-host-stats",
+  "version": "1.0.0",
+  "description": "Analyze TechLinked views and likes by host.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "collect": "node src/collect.js",
+    "classify": "node src/classify.js",
+    "report": "node src/report.js",
+    "start": "node src/local-server.js"
+  },
+  "author": "kyan0045",
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TechLinked video performance by host">
+  <title>TechLinked Host Performance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="https://www.youtube.com/techlinked" target="_blank" rel="noreferrer">
+        <img id="channel-avatar" src="https://yt3.ggpht.com/_7NuLsyaCWL63spCS74vy7RGd8s5cwx0FATJTvEeew3OH5d7TuD9hGcxbrhoYcMFT4mBxaJm=s800-c-k-c0x00ffffff-no-rj" alt="TechLinked">
+        <span>TechLinked analytics</span>
+      </a>
+      <span id="updated">Loading data...</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="report-heading">
+      <div>
+        <p class="overline">HOST PERFORMANCE REPORT</p>
+        <h1>TechLinked by the numbers</h1>
+        <p>Public views and likes compared across TechLinked presenters.</p>
+      </div>
+      <div class="report-range">
+        <span>Reporting period</span>
+        <strong id="report-range">Loading...</strong>
+      </div>
+    </section>
+
+    <section id="app" aria-live="polite">
+      <p class="loading">Preparing report...</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>All images and trademarks belong to their respective owners. This is an unofficial, non-commercial hobby project.</p>
+    </div>
+  </footer>
+
+  <template id="dashboard-template">
+    <section class="summary" id="summary"></section>
+
+    <section class="report-section">
+      <div class="section-heading">
+        <h2>Host comparison</h2>
+        <p>Average performance per upload</p>
+      </div>
+      <div class="comparison-grid">
+        <article class="chart-panel">
+          <h3>Average views</h3>
+          <div class="bar-chart" id="views-chart"></div>
+        </article>
+        <article class="chart-panel">
+          <h3>Average likes</h3>
+          <div class="bar-chart" id="likes-chart"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="report-section">
+      <div class="section-heading">
+        <h2>Views over time</h2>
+        <p>Complete calendar months only; dotted lines bridge missing months</p>
+      </div>
+      <div class="trend-legend" id="trend-legend"></div>
+      <div class="trend-wrap" id="trend-chart"></div>
+    </section>
+
+    <section class="report-section">
+      <div class="section-heading">
+        <h2>Upload timeline</h2>
+        <p>One marker per published video</p>
+      </div>
+      <div class="timeline-wrap" id="upload-timeline"></div>
+    </section>
+
+    <section class="report-section table-section">
+      <div class="section-heading">
+        <h2>Detailed results</h2>
+        <p>Current public counts</p>
+      </div>
+      <div class="results-table">
+        <div class="results-head">
+          <span>Host</span><span>Uploads</span><span>Total views</span><span>Avg. views</span><span>Total likes</span><span>Avg. likes</span>
+        </div>
+        <div id="results-body"></div>
+      </div>
+      <p class="method-note">Videos with hidden likes are omitted from like calculations.</p>
+      <div class="generated-report" id="generated-report" hidden>
+        <div class="generated-report-heading">
+          <h3>Overall summary</h3>
+          <span id="report-meta"></span>
+        </div>
+        <p id="overall-report"></p>
+      </div>
+    </section>
+  </template>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

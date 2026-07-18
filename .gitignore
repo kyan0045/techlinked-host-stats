@@ -1,0 +1,5 @@
+.env
+.vercel/
+data/auto-hosts.json
+node_modules/
+npm-debug.log*

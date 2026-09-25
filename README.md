@@ -10,7 +10,7 @@ This project is not affiliated with TechLinked, Linus Media Group, YouTube, or G
 - Videos shorter than or equal to three minutes are treated as Shorts and excluded.
 - Videos are included only after they are seven days old, giving their statistics time to settle.
 - Gemini identifies the presenter from the opening 30 seconds of each new video.
-- Host names, full names, and chart colors are stored in `data/hosts.json`. Confidently identified new presenters are added automatically.
+- Host first names and chart colors are stored in `data/hosts.json`. Confidently identified new presenters are added automatically.
 - Gemini generates one overall comparison of host performance using upload counts and raw view and like statistics.
 - The published dashboard reads the generated snapshot from `data/videos.json`.
 

@@ -104,7 +104,7 @@
       "duration": "PT8M22S",
       "views": 291397,
       "likes": 13085,
-      "host": "David Gauthier",
+      "host": "David",
       "hostSource": "automatic",
       "hostConfidence": "high"
     },
@@ -2189,6 +2189,6 @@
   "overallReport": {
     "generatedAt": "2026-09-21T15:05:48.428Z",
     "model": "gemini-3.1-flash-lite",
-    "summary": "Riley performs best on average and appears the preferred host, as they hold the top rank for both average views and average public likes. While Riley also leads in total views and total likes, this is heavily influenced by their significantly higher upload volume compared to other hosts. Linus records the weakest result for average views, while David Gauthier records the weakest results for both average likes and total volume metrics. The rankings for Elijah and David Gauthier are less reliable due to their very small sample sizes of four and one uploads respectively."
+    "summary": "Riley performs best on average and appears the preferred host, as they hold the top rank for both average views and average public likes. While Riley also leads in total views and total likes, this is heavily influenced by their significantly higher upload volume compared to other hosts. Linus records the weakest result for average views, while David records the weakest results for both average likes and total volume metrics. The rankings for Elijah and David are less reliable due to their very small sample sizes of four and one uploads respectively."
   }
 }

@@ -13,7 +13,6 @@ export function calculateMetrics(videos, hosts = []) {
     const metadata = hosts.find((host) => host.name === hostName);
     return {
       host: hostName,
-      fullName: metadata?.fullName || hostName,
       color: metadata?.color || "#64748b",
       videos: hosted.length,
       totalViews: hosted.reduce((sum, video) => sum + video.views, 0),

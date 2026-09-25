@@ -15,7 +15,6 @@ export function seedAutomaticHosts(videos, automatic = {}) {
     if (!video.host || automatic[video.id]) continue;
     automatic[video.id] = {
       host: video.host,
-      fullName: video.host,
       confidence: video.hostConfidence || "high",
       reason: "Preserved from the published snapshot",
       classifiedAt: video.classifiedAt || null

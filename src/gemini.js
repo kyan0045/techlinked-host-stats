@@ -8,18 +8,12 @@ function responseText(body) {
 
 export function normalizeHostClassification(parsed, hosts) {
   const rawHost = String(parsed.host || "").trim();
-  const known = hosts.find((host) => (
-    host.name.toLowerCase() === rawHost.toLowerCase()
-    || host.fullName.toLowerCase() === rawHost.toLowerCase()
-  ));
+  const known = hosts.find((host) => host.name.toLowerCase() === rawHost.toLowerCase());
   const validName = /^[\p{L}][\p{L} .'-]{0,49}$/u.test(rawHost);
-  const rawFullName = String(parsed.fullName || rawHost).trim();
-  const validFullName = /^[\p{L}][\p{L} .'-]{0,79}$/u.test(rawFullName);
   const confidenceAccepted = known ? parsed.confidence !== "low" : parsed.confidence === "high";
   const accepted = rawHost.toLowerCase() !== "unknown" && validName && confidenceAccepted;
   return {
     host: accepted ? known?.name || rawHost : null,
-    fullName: accepted ? known?.fullName || (validFullName ? rawFullName : rawHost) : null,
     confidence: parsed.confidence,
     reason: parsed.reason
   };
@@ -30,7 +24,7 @@ export async function classifyVideoHost(video, apiKey, options = {}) {
   const endpoint = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`);
   endpoint.searchParams.set("key", apiKey);
   const hosts = options.hosts || [];
-  const choices = hosts.map((host) => `${host.name} (${host.fullName})`).join(", ");
+  const choices = hosts.map((host) => host.name).join(", ");
   const clipSeconds = options.clipSeconds || 30;
   const body = {
     contents: [{
@@ -40,7 +34,7 @@ export async function classifyVideoHost(video, apiKey, options = {}) {
           videoMetadata: { startOffset: "0s", endOffset: `${clipSeconds}s` }
         },
         {
-          text: `Identify the main on-camera presenter who delivers the opening news story in this TechLinked video. Known hosts are: ${choices}. Return the listed short name exactly for a known host. If the presenter is someone else, return their commonly used short name and full name so they can be added as a new host. Use the presenter's face and voice, not names mentioned in the news, people in inserted clips, or brief cameos. If the presenter cannot be identified confidently, return Unknown. The video title is: ${video.title}`
+          text: `Identify the main on-camera presenter who delivers the opening news story in this TechLinked video. Known hosts are: ${choices}. Return the listed name exactly for a known host. If the presenter is someone else, return only their commonly used first or professional name so they can be added as a new host. Do not include a surname. Use the presenter's face and voice, not names mentioned in the news, people in inserted clips, or brief cameos. If the presenter cannot be identified confidently, return Unknown. The video title is: ${video.title}`
         }
       ]
     }],
@@ -50,12 +44,11 @@ export async function classifyVideoHost(video, apiKey, options = {}) {
       responseJsonSchema: {
         type: "object",
         properties: {
-          host: { type: "string", description: "Known short host name, a newly identified short name, or Unknown" },
-          fullName: { type: "string", description: "The presenter's full name, or Unknown" },
+          host: { type: "string", description: "Known host name, newly identified first or professional name, or Unknown" },
           confidence: { type: "string", enum: ["high", "medium", "low"] },
           reason: { type: "string", description: "A brief visual or spoken reason for the identification" }
         },
-        required: ["host", "fullName", "confidence", "reason"]
+        required: ["host", "confidence", "reason"]
       }
     }
   };

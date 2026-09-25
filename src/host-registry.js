@@ -15,7 +15,6 @@ export function mergeDiscoveredHosts(hosts, automatic) {
     if (result.confidence !== "high") continue;
     hosts.push({
       name: result.host,
-      fullName: result.fullName || result.host,
       color: colors[hosts.length % colors.length]
     });
     changed = true;

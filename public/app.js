@@ -22,6 +22,24 @@ function ranked(key = "averageViews") {
   return [...data.metrics.byHost].sort((a, b) => (b[key] || 0) - (a[key] || 0));
 }
 
+function exportCsv() {
+  const rows = [
+    ["host", "uploads", "totalViews", "averageViews", "totalLikes", "averageLikes"],
+    ...ranked().map((item) => [item.host, item.videos, item.totalViews, item.averageViews, item.totalLikes, item.averageLikes])
+  ];
+  const quote = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+  const csv = rows.map((row) => row.map(quote).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `techlinked-host-stats-${data.collectedAt.slice(0, 10)}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
 function renderSummary() {
   const classified = data.videos.filter((video) => video.host);
   const totalViews = classified.reduce((sum, video) => sum + video.views, 0);
@@ -181,6 +199,7 @@ async function init() {
     if (!response.ok) throw new Error(result.error);
     data = result;
     app.replaceChildren(template.content.cloneNode(true));
+    document.querySelector("#export-csv").addEventListener("click", exportCsv);
     const endInclusive = new Date(new Date(data.range.endExclusive).getTime() - 1);
     document.querySelector("#report-range").textContent = `${formatDate(data.range.start)} - ${formatDate(endInclusive)}`;
     const avatar = document.querySelector("#channel-avatar");

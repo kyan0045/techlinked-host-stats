@@ -47,6 +47,9 @@ main { background: var(--paper); border-left: 1px solid var(--line); border-righ
 .section-heading { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 38px; }
 .section-heading h2 { margin: 0; font-size: 20px; letter-spacing: -.025em; }
 .section-heading p { margin: 0; color: var(--muted); font-size: 11px; }
+.export-button { padding: 9px 12px; border: 1px solid var(--line); color: var(--ink); background: var(--paper); font: 500 10px Inter, sans-serif; cursor: pointer; }
+.export-button:hover { border-color: #b9c0ca; background: #f8f9fa; }
+.export-button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 
 .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; }
 .chart-panel { padding-right: 40px; }

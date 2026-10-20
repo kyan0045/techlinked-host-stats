@@ -20,7 +20,7 @@ export function normalizeHostClassification(parsed, hosts) {
 }
 
 export async function classifyVideoHost(video, apiKey, options = {}) {
-  const model = options.model || process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
+  const model = options.model || process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
   const endpoint = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`);
   endpoint.searchParams.set("key", apiKey);
   const hosts = options.hosts || [];

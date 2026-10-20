@@ -28,7 +28,7 @@ if (!apiKey) {
     delete data.hostReports;
     data.overallReport = {
       generatedAt: new Date().toISOString(),
-      model: process.env.GEMINI_MODEL || "gemini-3.1-flash-lite",
+      model: process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
       summary
     };
     await writeJson(videosPath, data);

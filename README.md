@@ -21,7 +21,7 @@ Local development uses Node.js 20 or newer. Configuration is loaded from `.env`;
 ```ini
 YOUTUBE_API_KEY=your_youtube_api_key
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-3.1-flash-lite
+GEMINI_MODEL=gemini-3.5-flash-lite
 
 REPORT_START_DATE=2025-07-01
 REPORT_END_DATE=today
@@ -59,4 +59,4 @@ The workflow:
 6. Regenerates the overall Gemini summary.
 7. Commits `data/videos.json` and `data/hosts.json`.
 
-The workflow reads `YOUTUBE_API_KEY` and `GEMINI_API_KEY` from GitHub Actions secrets. Its model defaults to `gemini-3.1-flash-lite` and can be changed through the `GEMINI_MODEL` Actions variable.
+The workflow reads `YOUTUBE_API_KEY` and `GEMINI_API_KEY` from GitHub Actions secrets. Its model defaults to `gemini-3.5-flash-lite` and can be changed through the `GEMINI_MODEL` Actions variable.

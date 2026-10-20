@@ -21,7 +21,7 @@ if (!apiKey) {
       dailyLimit: settings.dailyLimit,
       onDelay: (milliseconds) => console.log(`Waiting ${Math.ceil(milliseconds / 1000)}s for the request limit...`)
     });
-    const summary = await generateOverallReport(data.videos, hosts, apiKey, {
+    const report = await generateOverallReport(data.videos, hosts, apiKey, {
       ...settings,
       beforeRequest
     });
@@ -29,7 +29,7 @@ if (!apiKey) {
     data.overallReport = {
       generatedAt: new Date().toISOString(),
       model: process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
-      summary
+      ...report
     };
     await writeJson(videosPath, data);
     console.log("Generated the overall host performance summary.");

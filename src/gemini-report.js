@@ -6,6 +6,8 @@ function responseText(body) {
   return body.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
 }
 
+const LOW_SAMPLE_UPLOADS = 3;
+
 export function overallReportStats(videos, hosts) {
   return hosts.map((host) => {
     const hosted = videos.filter((video) => video.host === host.name);
@@ -19,20 +21,94 @@ export function overallReportStats(videos, hosts) {
       averageViews: hosted.length ? Math.round(totalViews / hosted.length) : null,
       totalLikes,
       averageLikes: likes.length ? Math.round(totalLikes / likes.length) : null,
-      videosWithPublicLikes: likes.length
+      videosWithPublicLikes: likes.length,
+      reliability: hosted.length < LOW_SAMPLE_UPLOADS ? "low" : "ok"
     };
   }).filter((host) => host.uploads > 0);
 }
 
+function marginToNext(gap, leaderValue) {
+  if (gap == null) return null;
+  if (gap === 0) return "tied";
+  if (!leaderValue) return null;
+  const ratio = gap / leaderValue;
+  if (ratio < 0.05) return "narrow";
+  if (ratio < 0.15) return "clear";
+  return "wide";
+}
+
+function ranked(statistics, key) {
+  const sorted = statistics.filter((item) => item[key] != null).sort((a, b) => b[key] - a[key]);
+  const leaderValue = sorted[0]?.[key] ?? null;
+  return sorted.map((item, index) => {
+    const next = sorted[index + 1];
+    const gap = next ? item[key] - next[key] : null;
+    return {
+      rank: index + 1,
+      host: item.host,
+      marginToNext: marginToNext(gap, leaderValue)
+    };
+  });
+}
+
+function followsUploads(statistics, key) {
+  const ordered = [...statistics].sort((a, b) => b.uploads - a.uploads);
+  return ordered.every((item, index) => index === 0 || ordered[index - 1][key] >= item[key]);
+}
+
 export function overallReportRankings(statistics) {
-  const order = (key) => [...statistics]
-    .filter((item) => item[key] != null)
-    .sort((a, b) => b[key] - a[key])
-    .map((item) => item.host);
+  const averageViews = ranked(statistics, "averageViews");
+  const averageLikes = ranked(statistics, "averageLikes");
   return {
-    averageViewsHighestToLowest: order("averageViews"),
-    averageLikesHighestToLowest: order("averageLikes")
+    averageViews,
+    averageLikes,
+    spread: {
+      averageViews: spreadLabel(averageViews),
+      averageLikes: spreadLabel(averageLikes)
+    },
+    volume: {
+      totalViewsFollowUploads: followsUploads(statistics, "totalViews"),
+      totalLikesFollowUploads: followsUploads(statistics, "totalLikes")
+    }
   };
+}
+
+export function overallReportCaveats(statistics) {
+  const caveats = statistics
+    .filter((item) => item.reliability === "low")
+    .sort((a, b) => a.uploads - b.uploads)
+    .map((item) => `${item.host} has ${item.uploads} upload${item.uploads === 1 ? "" : "s"}, so that ranking is uncertain.`);
+  if (statistics.some((item) => item.videosWithPublicLikes < item.uploads)) {
+    caveats.push("Some videos hide likes, so average likes use fewer videos than uploads.");
+  }
+  return caveats;
+}
+
+function spreadLabel(items) {
+  if (items.length < 3) return "too few hosts to judge";
+  const gaps = items.slice(0, -1);
+  const close = gaps.filter((item) => item.marginToNext === "narrow" || item.marginToNext === "tied").length;
+  return close * 2 >= gaps.length ? "tightly grouped" : "spread out";
+}
+
+export function overallReportPrompt(statistics, rankings) {
+  return `Write a short, plain-language report about TechLinked host performance using only the supplied statistics and rankings. Focus on the big picture rather than a host-by-host breakdown.
+Rules:
+- Use the exact host names from the statistics. Never add a surname.
+- Do not use digits, exact values, percentages, or like and engagement rates anywhere in the headline or findings.
+- Describe how close results are only with the supplied marginToNext and spread labels. Do not recalculate or invent a margin.
+- Never say or imply that a host caused the results, that these figures prove audience preference, or that one host is "better".
+- If a ranking is tied, say so instead of choosing a winner.
+Output:
+- headline: one sentence of at most 120 characters naming who leads on average views and, when different, average likes.
+- findings: two or three entries, one per topic, in this order when the data supports it:
+  "leader" - who leads and whether that lead is narrow, clear, or wide across the two average metrics; mention only the leader and the margins, not the rest of the field;
+  "spread" - whether average views and average likes are tightly grouped or spread out, using the supplied spread labels and noting when the two metrics differ;
+  "volume" - whether total views and total likes follow upload volume, using the supplied volume flags.
+  Each "text" is a single sentence with no numbers.
+- interpretation: one sentence beginning "Interpretation:" that frames the results as observations from video metrics rather than proof of audience sentiment.
+Statistics: ${JSON.stringify(statistics)}
+Rankings: ${JSON.stringify(rankings)}`;
 }
 
 export async function generateOverallReport(videos, hosts, apiKey, options = {}) {
@@ -44,7 +120,7 @@ export async function generateOverallReport(videos, hosts, apiKey, options = {})
   const body = {
     contents: [{
       parts: [{
-        text: `Write one concise comparative summary of four to six sentences about TechLinked host performance using only the supplied statistics and precomputed rankings. State who performs best on average and who appears the preferred host based on average views and average public likes. Describe the weakest result for each metric separately. Compare total views and likes only with the context of upload volume. Explicitly note small sample sizes when they make a ranking less reliable. Do not calculate or mention like rates, engagement rates, or percentages. Treat preference as an observation from these video metrics, not proof of audience sentiment or that a host caused the result. Use plain language and only the exact host names in the supplied statistics; never add a surname. Statistics: ${JSON.stringify(statistics)}. Rankings: ${JSON.stringify(rankings)}`
+        text: overallReportPrompt(statistics, rankings)
       }]
     }],
     generationConfig: {
@@ -53,9 +129,21 @@ export async function generateOverallReport(videos, hosts, apiKey, options = {})
       responseJsonSchema: {
         type: "object",
         properties: {
-          summary: { type: "string" }
+          headline: { type: "string" },
+          findings: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                topic: { type: "string", enum: ["leader", "spread", "volume"] },
+                text: { type: "string" }
+              },
+              required: ["topic", "text"]
+            }
+          },
+          interpretation: { type: "string" }
         },
-        required: ["summary"]
+        required: ["headline", "findings", "interpretation"]
       }
     }
   };
@@ -71,7 +159,17 @@ export async function generateOverallReport(videos, hosts, apiKey, options = {})
     const result = await response.json();
     if (response.ok) {
       const parsed = JSON.parse(responseText(result));
-      return String(parsed.summary || "Report unavailable.").trim();
+      return {
+        headline: String(parsed.headline || "Report unavailable.").trim(),
+        findings: Array.isArray(parsed.findings)
+          ? parsed.findings.map((finding) => ({
+            topic: String(finding.topic || "").trim(),
+            text: String(finding.text || "").trim()
+          }))
+          : [],
+        caveats: overallReportCaveats(statistics),
+        interpretation: String(parsed.interpretation || "").trim()
+      };
     }
     lastError = new Error(result.error?.message || `Gemini returned ${response.status}`);
     if (![429, 500, 502, 503, 504].includes(response.status)) break;

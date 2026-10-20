@@ -185,11 +185,55 @@ function renderTable() {
 }
 
 function renderOverallReport() {
-  if (!data.overallReport?.summary) return;
+  const report = data.overallReport;
+  if (!report) return;
   const container = document.querySelector("#generated-report");
   container.hidden = false;
-  document.querySelector("#report-meta").textContent = `${data.overallReport.model} / ${formatDate(data.overallReport.generatedAt)}`;
-  document.querySelector("#overall-report").textContent = data.overallReport.summary;
+  document.querySelector("#report-meta").textContent = `${report.model} / ${formatDate(report.generatedAt)}`;
+  const target = document.querySelector("#overall-report");
+
+  if (!Array.isArray(report.findings)) {
+    target.textContent = report.summary || "";
+    return;
+  }
+
+  const nodes = [];
+  if (report.headline) {
+    const headline = document.createElement("p");
+    headline.className = "report-headline";
+    headline.textContent = report.headline;
+    nodes.push(headline);
+  }
+  if (report.findings.length) {
+    const list = document.createElement("ul");
+    list.className = "report-findings";
+    for (const finding of report.findings) {
+      const item = document.createElement("li");
+      const label = document.createElement("span");
+      label.className = "report-finding-metric";
+      label.textContent = finding.topic;
+      item.append(label, document.createTextNode(finding.text));
+      list.append(item);
+    }
+    nodes.push(list);
+  }
+  if (report.interpretation) {
+    const note = document.createElement("p");
+    note.className = "report-interpretation";
+    note.textContent = report.interpretation;
+    nodes.push(note);
+  }
+  if (report.caveats?.length) {
+    const caveats = document.createElement("ul");
+    caveats.className = "report-caveats";
+    for (const caveat of report.caveats) {
+      const item = document.createElement("li");
+      item.textContent = caveat;
+      caveats.append(item);
+    }
+    nodes.push(caveats);
+  }
+  target.replaceChildren(...nodes);
 }
 
 async function init() {
